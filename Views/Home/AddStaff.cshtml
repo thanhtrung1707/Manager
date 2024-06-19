@@ -1,0 +1,31 @@
+@model Manager.Models.Staff
+
+@{
+    ViewData["Title"] = "Add Staff";
+}
+
+<h1>Add Staff</h1>
+
+<form asp-action="AddStaff">
+    <div class="form-group">
+        <label asp-for="Name" class="control-label">Name</label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="GrId" class="control-label">GrId</label>
+        <input asp-for="GrId" class="form-control" />
+        <span asp-validation-for="GrId" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Add Staff</button>
+    </div>
+</form>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
