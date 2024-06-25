@@ -1,4 +1,8 @@
-﻿@model IEnumerable<Manager.Models.Staff>
+﻿@model Manager.Controllers.StaffViewModel
+@{
+    var searchName = ViewContext.HttpContext.Request.Query["searchName"].ToString();
+    var searchGrId = ViewContext.HttpContext.Request.Query["searchGrId"].ToString();
+}
 
 <!DOCTYPE html>
 <html>
@@ -41,7 +45,20 @@
 <body>
     <div class="container">
         <h1>Staff List</h1>
-        <table class="table table-striped">
+
+        <form method="get" asp-action="Index" asp-controller="Home">
+            <div class="form-group">
+                <input type="text" name="searchName" class="form-control" placeholder="Search by Name"
+                    value="@searchName" />
+            </div>
+            <div class="form-group">
+                <input type="text" name="searchGrId" class="form-control" placeholder="Search by GrId"
+                    value="@searchGrId" />
+            </div>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+
+        <table class="table table-striped mt-3">
             <thead>
                 <tr>
                     <th>Id</th>
@@ -51,18 +68,18 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var staff in Model.Select((value, index) => new { Value = value, Index = index }))
+                @foreach (var staff in Model.StaffList.Select((value, index) => new { Value = value, Index = index }))
                 {
                     <tr>
-                        <td>@(staff.Index + 1)</td>
+                        <td>@(staff.Index + 1 + (Model.PageNumber - 1) * 5)</td>
                         <td>@staff.Value.Name</td>
                         <td>@staff.Value.GrId</td>
                         <td>
                             <a class="btn btn-primary"
                                 href="@Url.Action("EditStaff", "Home", new { id = staff.Value.Id })">Edit</a>
                             <button type="button" class="btn btn-danger"
-                                onclick="confirmDelete(@(staff.Index))">Delete</button>
-                            <form id="deleteForm_@(staff.Index)" asp-controller="Home" asp-action="DeleteStaff"
+                                onclick="confirmDelete(@staff.Value.Id)">Delete</button>
+                            <form id="deleteForm_@(staff.Value.Id)" asp-controller="Home" asp-action="DeleteStaff"
                                 method="post" style="display: none;">
                                 <input type="hidden" name="id" value="@staff.Value.Id" />
                             </form>
@@ -71,7 +88,19 @@
                 }
             </tbody>
         </table>
-        <br />
+
+        <nav>
+            <ul class="pagination">
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(Model.PageNumber == i ? "active" : "")">
+                        <a class="page-link"
+                            href="@Url.Action("Index", new { pageNumber = i, searchName = searchName, searchGrId = searchGrId })">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+
         <form asp-controller="Home" asp-action="AddStaff" method="get">
             <button type="submit" class="btn btn-primary">Add Staff</button>
         </form>

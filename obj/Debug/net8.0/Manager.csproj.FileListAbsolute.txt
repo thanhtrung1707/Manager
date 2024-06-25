@@ -108,3 +108,4 @@
 /Users/macos/Manager/bin/Debug/net8.0/Microsoft.Extensions.Identity.Core.dll
 /Users/macos/Manager/bin/Debug/net8.0/Microsoft.Extensions.Identity.Stores.dll
 /Users/macos/Manager/bin/Debug/net8.0/Microsoft.Extensions.Options.dll
+/Users/macos/Manager/obj/Debug/net8.0/Manager.sourcelink.json

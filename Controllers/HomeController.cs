@@ -1,5 +1,3 @@
-// HomeController.cs
-
 using Manager.Data;
 using Manager.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -18,10 +16,36 @@ namespace Manager.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchName, string searchGrId, int pageNumber = 1)
         {
-            var entities = await _context.Staff.OrderBy(s => s.GrId).ThenBy(s => s.Id).ToListAsync();
-            return View(entities);
+            int pageSize = 5;
+            var query = _context.Staff.AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchName))
+            {
+                query = query.Where(s => s.Name.StartsWith(searchName));
+            }
+
+            if (!string.IsNullOrEmpty(searchGrId))
+            {
+                query = query.Where(s => s.GrId.Contains(searchGrId));
+            }
+
+            var entities = await query.OrderBy(s => s.GrId)
+                                      .ThenBy(s => s.Id)
+                                      .Skip((pageNumber - 1) * pageSize)
+                                      .Take(pageSize)
+                                      .ToListAsync();
+
+            var totalRecords = await query.CountAsync();
+            var viewModel = new StaffViewModel
+            {
+                StaffList = entities,
+                PageNumber = pageNumber,
+                TotalPages = (int)Math.Ceiling(totalRecords / (double)pageSize)
+            };
+
+            return View(viewModel);
         }
 
         public IActionResult AddStaff()
@@ -59,58 +83,63 @@ namespace Manager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-
-
-      [HttpGet]
-public async Task<IActionResult> EditStaff(int id)
-{
-    var staff = await _context.Staff.FindAsync(id);
-
-    if (staff == null)
-    {
-        return NotFound();
-    }
-
-    return View(staff);
-}
-
-[HttpPost]
-public async Task<IActionResult> EditStaff(int id, Staff staff)
-{
-    if (id != staff.Id)
-    {
-        return NotFound();
-    }
-
-    if (ModelState.IsValid)
-    {
-        try
+        [HttpGet]
+        public async Task<IActionResult> EditStaff(int id)
         {
-            _context.Update(staff);
-            await _context.SaveChangesAsync();
-            
-            TempData["Message"] = "Staff updated successfully!";
-            return RedirectToAction(nameof(Index));
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!StaffExists(staff.Id))
+            var staff = await _context.Staff.FindAsync(id);
+
+            if (staff == null)
             {
                 return NotFound();
             }
-            else
-            {
-                throw;
-            }
-        }
-    }
 
-    return View(staff);
-}
+            return View(staff);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditStaff(int id, Staff staff)
+        {
+            if (id != staff.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(staff);
+                    await _context.SaveChangesAsync();
+
+                    TempData["Message"] = "Staff updated successfully!";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!StaffExists(staff.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
+
+            return View(staff);
+        }
 
         private bool StaffExists(int id)
         {
             return _context.Staff.Any(e => e.Id == id);
         }
+    }
+
+    public class StaffViewModel
+    {
+        public List<Staff> StaffList { get; set; }
+        public int PageNumber { get; set; }
+        public int TotalPages { get; set; }
     }
 }
